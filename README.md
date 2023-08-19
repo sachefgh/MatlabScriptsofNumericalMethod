@@ -1,2 +1,2 @@
 # MatlabScriptsofNumericalMethod
-(personal use)
+personal use only.
