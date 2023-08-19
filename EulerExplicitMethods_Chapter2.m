@@ -3,6 +3,8 @@ f=@(t,y)y*(2/t+1);
 % Euler Explicit Method , using total steps.
 % Param:
 % - f : refers to function handle of f(t,y) |||  y'=f(t,y) ||| yˇi+1=yˇi + hf(tˇi,yˇi)
+%           e.g. -------->    f=@(t,y)y*(2/t+1);
+%
 % - start_t,end_t : start and end limits of time
 % - start_value : Initial condition, y(start_t)=start_value
 % - total_steps : total_steps*h = (end_t-start_t)
@@ -21,6 +23,8 @@ end
 % Euler Explicit Method , using step interval.
 % Param:
 % - f : refers to function handle of f(t,y) |||  y'=f(t,y) ||| yˇi+1=yˇi + hf(tˇi,yˇi)
+%           e.g. -------->    f=@(t,y)y*(2/t+1);
+%
 % - start_t,end_t : start and end limits of time
 % - start_value : Initial condition, y(start_t)=start_value
 % - h : total_steps*h = (end_t-start_t)
@@ -29,7 +33,7 @@ end
 function return_EEI = EulerExpilicit_Interval(f,start_t,end_t,start_value,h)
     total_steps = ceil((end_t-start_t)/h);
     T = zeros(1,total_steps+1);
-    Yt = zeros(1,total_steps+1);
+    Yt = zeros(1,total_steps+1); 
    % fill time array.
    T(1)=start_t; T(total_steps+1)=end_t;
    for j=1:(total_steps-1)
