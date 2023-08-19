@@ -8,8 +8,8 @@ f=@(t,y)y*(2/t+1);
 % - start_t,end_t : start and end limits of time
 % - start_value : Initial condition, y(start_t)=start_value
 % - total_steps : total_steps*h = (end_t-start_t)
-% @ return_EES : return Matrix of results. return_EES(:,1) is time,
-% return_EES(:,2) is value y at the time.
+% @ return_EES : return Matrix of results. return_EES(:,1) is time t,
+% return_EES(:,2) is value y at time t.
 function return_EES = EulerExpilicit_Steps(f,start_t,end_t,start_value,total_steps)
     h = (end_t-start_t)/total_steps;
     T = linspace(start_t,end_t,total_steps+1);
@@ -20,6 +20,8 @@ function return_EES = EulerExpilicit_Steps(f,start_t,end_t,start_value,total_ste
     end
     return_EES = [T' Yt'];
 end
+
+
 % Euler Explicit Method , using step interval.
 % Param:
 % - f : refers to function handle of f(t,y) |||  y'=f(t,y) ||| yˇi+1=yˇi + hf(tˇi,yˇi)
@@ -27,9 +29,9 @@ end
 %
 % - start_t,end_t : start and end limits of time
 % - start_value : Initial condition, y(start_t)=start_value
-% - h : total_steps*h = (end_t-start_t)
-% @ return_EES : return Matrix of results. return_EES(:,1) is time,
-% return_EES(:,2) is value y at the time.
+% - h : interval between tˇi+1 and tˇi
+% @ return_EEI : return Matrix of results. return_EEI(:,1) is time t,
+% return_EEI(:,2) is value y at time t.
 function return_EEI = EulerExpilicit_Interval(f,start_t,end_t,start_value,h)
     total_steps = ceil((end_t-start_t)/h);
     T = zeros(1,total_steps+1);
