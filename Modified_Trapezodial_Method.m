@@ -32,5 +32,3 @@ function return_MT = ModifiedTraezodial(f,start_t,end_t,y0,stepN)
     % reture time and Y
     return_MT = [T' Yt'];
 end
-
-end
