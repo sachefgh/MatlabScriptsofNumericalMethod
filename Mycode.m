@@ -1,14 +1,19 @@
-f=@(t,a)[0,1;-2,-0.1]*a+[0;0.2*cos(2*t)+0.5*sin(t)];
-
-interval= 0.1;
-E1 = ModifiedTrapezodial_MAT_Interval(f,0,50,[0.1;0],interval);
-E2 = Runge_Kutta_MAT_Interval(f,0,50,[0.1;0],interval);
+% f=@(t,a)[0,1;-2,-0.1]*a+[0;0.2*cos(2*t)+0.5*sin(t)];
+% interval= 0.1;
+% E1 = ModifiedTrapezodial_MAT_Interval(f,0,50,[0.1;0],interval);
+% E2 = Runge_Kutta_MAT_Interval(f,0,50,[0.1;0],interval);
 %xstring = sprintf('t (h=%g)',interval);
-plot(E1(1,:),E1(2,:),'--','Color','red'); hold;
-%xlabel(xstring,'Color','magenta');ylabel('Y','Color','magenta');
-plot(E2(1,:),E2(2,:),'--','Color','blue');
+% plot(E1(1,:),E1(2,:),'--','Color','red'); hold;
+% %xlabel(xstring,'Color','magenta');ylabel('Y','Color','magenta');
+% plot(E2(1,:),E2(2,:),'--','Color','blue'); hold;
 
-% Modified Trapezodial Method - MATRIX - using total steps
+% k=@(t)10; c=@(t)1;m=@(t)10; F=@(t)sin(t);
+% E3 = CDM_steps(m,c,k,F,0,50,[1;0],200);
+% plot(E3(1,:),E3(2,:));
+
+
+
+% Modified Trapezodial Method - MATRIX - 2nd IVP - using total steps
 % This is to solve 2nd order IVP INDIRECTLY, by modify all relations
 % between multiple order into function f.
 % param:
@@ -44,7 +49,7 @@ function return_MTM = ModifiedTrapezodial_MAT_steps(f,start_t,end_t,a0,stepN)
     return_MTM = [return_MTM;cell2mat(a)]; % merge vertically
 end
 
-% Modified Trapezodial Method - MATRIX - using step Interval
+% Modified Trapezodial Method - MATRIX - 2nd IVP - using step Interval
 % This is to solve 2nd order IVP INDIRECTLY, by modify all relations
 % between multiple order into function f.
 % param:
@@ -86,32 +91,7 @@ function return_MTM = ModifiedTrapezodial_MAT_Interval(f,start_t,end_t,a0,h)
 
 end
 
-% Runge-Kutta Forth-order(RK4) Method - non-matrix - using total steps 
-% param:
-% - f : refers to function handle of f(t,y) |||  y'=f(t,y) ||| yˇi+1=yˇi + hf(tˇi,yˇi)
-%           e.g. -------->    f=@(t,y)y*(2/t+1);
-% - start_t,end_t : start and end limits of time
-% - y0 : Initial condition, y(start_t)=y0
-% - stepN : stepN * h = (end_t-start_t) , total EulerExp steps performed
-% @ return_RK : Matrix of results. return_MT(:,1) is time t,
-% return_RK(:,2) is value y at time
-function return_RK = Runge_Kutta_steps(f,start_t,end_t,y0,stepN)
-    % Define variables 
-    h = (end_t-start_t)/stepN; % step time h
-    T = linspace(start_t,end_t,stepN+1); % create&fill T which is step time
-    Yt = zeros(1,stepN+1);
-    Yt(1) = y0;
-    % iteration using RK4 Method
-    for i = 1:stepN
-        yi05_1 = Yt(i) + 0.5*h*f(T(i),Yt(i));
-        yi05_2 = Yt(i) + 0.5*h*f(T(i)+0.5*h,yi05_1);
-        yi1_3 = Yt(i) + h*f(T(i)+0.5*h,yi05_2);
-        Yt(i+1) = Yt(i) + h*(1/6)*(f(T(i),Yt(i))+2*f(T(i)+0.5*h,yi05_1)+2*f(T(i)+0.5*h,yi05_2)+f(T(i+1),yi1_3));
-    end
-    return_RK = [T' Yt'];
-end
-
-% Runge-Kutta Forth-order(RK4) Method - MATRIX - using total steps
+% Runge-Kutta Forth-order(RK4) Method - MATRIX - 2nd IVP - using total steps
 % This is to solve 2nd order IVP INDIRECTLY, by modify all relations
 % between multiple order into function f.
 % param:
@@ -147,7 +127,7 @@ function return_RK = Runge_Kutta_MAT_steps(f,start_t,end_t,a0,stepN)
     return_RK = [return_RK;cell2mat(a)]; % merge vertically
 end
 
-% Runge-Kutta Forth-order(RK4) Method - MATRIX - using Interval
+% Runge-Kutta Forth-order(RK4) Method - MATRIX - 2nd IVP - using Interval
 % This is to solve 2nd order IVP INDIRECTLY, by modify all relations
 % between multiple order into function f.
 % param:
@@ -186,6 +166,75 @@ function return_RK = Runge_Kutta_MAT_Interval(f,start_t,end_t,a0,h)
     % IMPORTANT : should covert cell a 2 Mat for proper output!!
     return_RK = T; % fill first row with time t
     return_RK = [return_RK;cell2mat(a)]; % merge vertically
+end
+
+% Central Difference Method(CDM) - non-matrix - 2nd IVP - using steps
+% Central difference method can solve 2nd IVP DIRECTLY, NO need to modify 
+% into a Matrix expression. Only to provide basic relation and IC: 
+%           m*(u'')+c*(u')+k*u = F       m,c,k,F can rather be constant or 
+%                                        time function.
+% param:
+% - m : function handle of m in expression above. m=@(t).....
+% - c : function handle of c in expression above. c=@(t).....
+% - k : function handle of k in expression above. k=@(t).....
+% - F : function handle of F in expression above. F=@(t).....
+% - start_t,end_t : start and end limits of time
+%      %%%%%%%%%%%%%%%%%%%%%%%%%%%%     %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% - U0 : Initial condition value (Array). 
+%           [U0] = [u0 ; u0'; u0''] 
+%        or [U0] = [u0 ; u0'] -->will calculate u0'       IMPORTANT  
+%      %%%%%%%%%%%%%%%%%%%%%%%%%%%%     %%%%%%%%%%%%%%%%%%%%%%%%%%%
+% - stepN : stepN * h = (end_t-start_t) , total  steps performed
+% @ return_CDM :  results value of u . return_CDM(1,:) is time t.
+%                 return_CDM(2,:) is value of u_i
+%
+function return_CDM = CDM_steps(m,c,k,F,start_t,end_t,U0,stepN)
+    % define variables
+    u = zeros(1, stepN+2); % using array to store value U
+    h = (end_t-start_t)/stepN; %step size
+    T = zeros(1,stepN+2);
+    T(1)=start_t-h; T(2)=start_t;
+    % Start-up condition
+    u(2)=U0(1);
+    %get u0 , u0' ,u0''
+    u0=U0(1); u0_1=U0(2);  
+    if length(U0(:))==2
+        u0_2 = ( F(T(1))- k(T(1))*u0 - c(T(1))*u0_1 )/m(T(1));
+    else
+        u0_2 = U0(3);
+    end
+    % Calculate u_-1
+    u(1) = u0-h*u0_1+u0_2*(h^2)/2;
+    for i = 2:stepN+1
+        T(i+1)=T(i)+h;
+        u(i+1) = (F(T(i))-u(i)*(k(T(i))-2*m(T(i))/(h^2))-u(i-1)*(m(T(i))/(h^2)- c(T(i))/(2*h))) / ( m(T(i))/(h^2) + c(T(i))/(2*h) );
+    end
+    return_CDM = [T(2:end) ; u(2:end) ];
+end
+
+% Runge-Kutta Forth-order(RK4) Method - non-matrix - using total steps 
+% param:
+% - f : refers to function handle of f(t,y) |||  y'=f(t,y) ||| yˇi+1=yˇi + hf(tˇi,yˇi)
+%           e.g. -------->    f=@(t,y)y*(2/t+1);
+% - start_t,end_t : start and end limits of time
+% - y0 : Initial condition, y(start_t)=y0
+% - stepN : stepN * h = (end_t-start_t) , total EulerExp steps performed
+% @ return_RK : Matrix of results. return_MT(:,1) is time t,
+% return_RK(:,2) is value y at time
+function return_RK = Runge_Kutta_steps(f,start_t,end_t,y0,stepN)
+    % Define variables 
+    h = (end_t-start_t)/stepN; % step time h
+    T = linspace(start_t,end_t,stepN+1); % create&fill T which is step time
+    Yt = zeros(1,stepN+1);
+    Yt(1) = y0;
+    % iteration using RK4 Method
+    for i = 1:stepN
+        yi05_1 = Yt(i) + 0.5*h*f(T(i),Yt(i));
+        yi05_2 = Yt(i) + 0.5*h*f(T(i)+0.5*h,yi05_1);
+        yi1_3 = Yt(i) + h*f(T(i)+0.5*h,yi05_2);
+        Yt(i+1) = Yt(i) + h*(1/6)*(f(T(i),Yt(i))+2*f(T(i)+0.5*h,yi05_1)+2*f(T(i)+0.5*h,yi05_2)+f(T(i+1),yi1_3));
+    end
+    return_RK = [T' Yt'];
 end
 
 % Modified Traezodial Method - non-matrix - using total steps
@@ -308,4 +357,5 @@ function return_EEI = EulerExpilicit_Interval(f,start_t,end_t,start_value,h)
    Yt(total_steps+1)=Yt(total_steps)+(T(total_steps+1)-T(total_steps))*f(T(total_steps),Yt(total_steps));
    return_EEI = [T' Yt'];
 end
+
 
