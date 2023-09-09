@@ -1,8 +1,22 @@
+f=@(t,a)[0,1;-2,-0.1]*a+[0;0.2*cos(2*t)+0.5*sin(t)];
+
+interval= 0.1;
+E1 = ModifiedTrapezodial_MAT_Interval(f,0,50,[0.1;0],interval);
+E2 = Runge_Kutta_MAT_Interval(f,0,50,[0.1;0],interval);
+%xstring = sprintf('t (h=%g)',interval);
+plot(E1(1,:),E1(2,:),'--','Color','red'); hold;
+%xlabel(xstring,'Color','magenta');ylabel('Y','Color','magenta');
+plot(E2(1,:),E2(2,:),'--','Color','blue');
+
 % Modified Trapezodial Method - MATRIX - using total steps
+% This is to solve 2nd order IVP INDIRECTLY, by modify all relations
+% between multiple order into function f.
 % param:
 % - f : refers to function handle of f(t,[a]) |||  a/dt=f(t,[a]) 
 %       @@ note that [a] should be a n*1 array
-%       f = [a]/dt = [K][a] + [F]
+%       f = [a]/dt = [K][a] + [F] ;[K] is constant matrix, [F] is function
+%       matrix related to time t
+%     e.g.  f=@(t,a)[0,1;-2,-0.1]*a+[0;0.2*cos(2*t)+0.5*sin(t)];
 % - start_t,end_t : start and end limits of time
 % - a0 : Initial condition, a(start_t)= [a0]
 %       @@ note that [a0] should be a n*1 array
@@ -31,10 +45,14 @@ function return_MTM = ModifiedTrapezodial_MAT_steps(f,start_t,end_t,a0,stepN)
 end
 
 % Modified Trapezodial Method - MATRIX - using step Interval
+% This is to solve 2nd order IVP INDIRECTLY, by modify all relations
+% between multiple order into function f.
 % param:
 % - f : refers to function handle of f(t,[a]) |||  a/dt=f(t,[a]) 
 %       @@ note that [a] should be a n*1 array
-%       f = [a]/dt = [K][a] + [F]
+%       f = [a]/dt = [K][a] + [F] ;[K] is constant matrix, [F] is function
+%       matrix related to time t
+%     e.g.  f=@(t,a)[0,1;-2,-0.1]*a+[0;0.2*cos(2*t)+0.5*sin(t)];
 % - start_t,end_t : start and end limits of time
 % - a0 : Initial condition, a(start_t)= [a0]
 %       @@ note that [a0] should be a n*1 array
@@ -94,24 +112,81 @@ function return_RK = Runge_Kutta_steps(f,start_t,end_t,y0,stepN)
 end
 
 % Runge-Kutta Forth-order(RK4) Method - MATRIX - using total steps
+% This is to solve 2nd order IVP INDIRECTLY, by modify all relations
+% between multiple order into function f.
 % param:
 % - f : refers to function handle of f(t,[a]) |||  a/dt=f(t,[a]) 
 %       @@ note that [a] should be a n*1 array
-%       f = [a]/dt = [K][a] + [F]
+%       f = [a]/dt = [K][a] + [F] ;[K] is constant matrix, [F] is function
+%       matrix related to time t. 
+%     e.g.  f=@(t,a)[0,1;-2,-0.1]*a+[0;0.2*cos(2*t)+0.5*sin(t)];
 % - start_t,end_t : start and end limits of time
 % - a0 : Initial condition, a(start_t)= [a0]
 %       @@ note that [a0] should be a n*1 array
 % - stepN : stepN * h = (end_t-start_t) , total  steps performed
+% @ return_RK : Matrix of results. First row return_RK(1,i) is time t_i,
+%   return_RK(2:end,i)-->is [a]_i (n*1 array) at time t_i.
+%
+function return_RK = Runge_Kutta_MAT_steps(f,start_t,end_t,a0,stepN)
+    % define variables
+    T = linspace(start_t,end_t,stepN+1); 
+    a = cell(1, stepN+1); % using cell array to store value a; a{1,i+1}->[a]_i 
+    h = (end_t-start_t)/stepN; %step size
+    % Init condition
+    a{1,1} = a0;
+    % Iteration using RK4 Method
+    for i=1:stepN
+        ai05_1 = a{1,i}+0.5*h*f(T(i),a{1,i});
+        ai05_2 = a{1,i}+0.5*h*f(T(i)+0.5*h,ai05_1);
+        ai1_3 = a{1,i}+h*f(T(i)+0.5*h,ai05_2);
+        a{1,i+1} =  a{1,i} + (1/6)*h*(  f(T(i),a{1,i}) + 2*f(T(i)+0.5*h,ai05_1) + 2*f(T(i)+0.5*h,ai05_2) + f(T(i+1),ai1_3) );
+    end
+    % return value
+    % IMPORTANT : should covert cell a 2 Mat for proper output!!
+    return_RK = T; % fill first row with time t
+    return_RK = [return_RK;cell2mat(a)]; % merge vertically
+end
 
-
-
-
-
-
-
-
-
-
+% Runge-Kutta Forth-order(RK4) Method - MATRIX - using Interval
+% This is to solve 2nd order IVP INDIRECTLY, by modify all relations
+% between multiple order into function f.
+% param:
+% - f : refers to function handle of f(t,[a]) |||  a/dt=f(t,[a]) 
+%       @@ note that [a] should be a n*1 array
+%       f = [a]/dt = [K][a] + [F] ;[K] is constant matrix, [F] is function
+%       matrix related to time t. 
+%     e.g.  f=@(t,a)[0,1;-2,-0.1]*a+[0;0.2*cos(2*t)+0.5*sin(t)];
+% - start_t,end_t : start and end limits of time
+% - a0 : Initial condition, a(start_t)= [a0]
+%       @@ note that [a0] should be a n*1 array
+% - h : stepN * h = (end_t-start_t) , interval
+% @ return_RK : Matrix of results. First row return_RK(1,i) is time t_i,
+%   return_RK(2:end,i)-->is [a]_i (n*1 array) at time t_i.
+%
+function return_RK = Runge_Kutta_MAT_Interval(f,start_t,end_t,a0,h)
+    stepN = ceil((end_t-start_t)/h);
+    % define variables
+    T = zeros(1,stepN+1);
+    a = cell(1, stepN+1);
+    % fill time array.
+    T(1)=start_t; T(stepN+1)=end_t;
+    for j=1:(stepN-1)
+        T(j+1)=T(j)+h;
+    end
+     % Init condition
+    a{1,1} = a0;
+    % Iteration using RK4 Method
+    for i=1:stepN
+        ai05_1 = a{1,i}+0.5*h*f(T(i),a{1,i});
+        ai05_2 = a{1,i}+0.5*h*f(T(i)+0.5*h,ai05_1);
+        ai1_3 = a{1,i}+h*f(T(i)+0.5*h,ai05_2);
+        a{1,i+1} =  a{1,i} + (1/6)*h*(  f(T(i),a{1,i}) + 2*f(T(i)+0.5*h,ai05_1) + 2*f(T(i)+0.5*h,ai05_2) + f(T(i+1),ai1_3) );
+    end
+    % return value
+    % IMPORTANT : should covert cell a 2 Mat for proper output!!
+    return_RK = T; % fill first row with time t
+    return_RK = [return_RK;cell2mat(a)]; % merge vertically
+end
 
 % Modified Traezodial Method - non-matrix - using total steps
 % param:
